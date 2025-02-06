@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('https://your-server-url.onrender.com');
+const socket = io('https://tic-tac-toe-server-t4vx.onrender.com');
 
 socket.on('connect', () => {
   console.log('Connected to server');

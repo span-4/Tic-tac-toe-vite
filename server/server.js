@@ -1,8 +1,15 @@
 import http from 'http';
 import express from 'express';
 import { Server } from 'socket.io';
+import cors from 'cors';
 
 const app = express();
+app.use(
+  cors({
+    origin: '*', // Разрешить запросы от всех доменов
+    methods: ['GET', 'POST'], // Разрешенные методы
+  }),
+);
 
 const server = http.createServer(app);
 const io = new Server(server, {

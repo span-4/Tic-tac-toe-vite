@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('http://192.168.100.4:3001');
+const socket = io('https://your-server-url.onrender.com');
+
+socket.on('connect', () => {
+  console.log('Connected to server');
+});
 
 const GameBoard = () => {
   const [board, setBoard] = useState(Array(9).fill(null));

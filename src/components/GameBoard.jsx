@@ -1,18 +1,14 @@
 import { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
+import PlayerList from './PlayerList';
 
-const socket = io('https://tic-tac-toe-server-t4vx.onrender.com');
-
-socket.on('connect', () => {
-  console.log('Connected to server');
-});
-
-const GameBoard = () => {
+const GameBoard = ({ socket, roomId, nickname }) => {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isXTurn, setIsXTurn] = useState(true);
   const [winner, setWinner] = useState(null);
   const [playerSymbol, setPlayerSymbol] = useState(null);
   const [isSpectator, setIsSpectator] = useState(false);
+  const [invite, setInvite] = useState(null);
+  const [gameHistory, setGameHistory] = useState([]);
 
   const checkWinner = (board) => {
     const winPatterns = [
@@ -36,26 +32,50 @@ const GameBoard = () => {
     socket.on('spectator', () => setIsSpectator(true));
 
     socket.on('gameState', ({ board, isXTurn }) => {
+      console.log(`Ход: ${board} на клетке ${isXTurn}`);
       setBoard(board);
       setIsXTurn(isXTurn);
       setWinner(checkWinner(board));
+    });
+
+    socket.on('inviteReceived', (from) => {
+      setInvite(from);
+    });
+
+    socket.on('gameHistory', (history) => {
+      setGameHistory(history);
     });
 
     return () => {
       socket.off('playerSymbol');
       socket.off('spectator');
       socket.off('gameState');
+      socket.off('inviteReceived');
+      socket.off('gameHistory');
     };
-  }, []);
+  }, [socket]);
 
   const handleClick = (index) => {
     if (board[index] || winner || isSpectator || (isXTurn ? 'X' : 'O') !== playerSymbol) return;
-    socket.emit('move', { index, symbol: playerSymbol });
+    socket.emit('move', { roomId, index, symbol: playerSymbol });
   };
 
   const handleReset = () => {
     if (isSpectator) return;
-    socket.emit('reset');
+    socket.emit('reset', roomId);
+  };
+
+  const sendInvite = (to) => {
+    socket.emit('sendInvite', { from: nickname, to });
+  };
+
+  const acceptInvite = () => {
+    socket.emit('acceptInvite', { from: invite, to: nickname });
+    setInvite(null);
+  };
+
+  const declineInvite = () => {
+    setInvite(null);
   };
 
   const backgroundColor = winner
@@ -95,6 +115,22 @@ const GameBoard = () => {
         disabled={isSpectator}>
         Сброс
       </button>
+      <PlayerList socket={socket} nickname={nickname} onInvite={sendInvite} />
+      {invite && (
+        <div>
+          <p>{invite} пригласил вас в игру</p>
+          <button onClick={acceptInvite}>Принять</button>
+          <button onClick={declineInvite}>Отклонить</button>
+        </div>
+      )}
+      <div>
+        <h3>История игр:</h3>
+        <ul>
+          {gameHistory.map((game, index) => (
+            <li key={index}>{game}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

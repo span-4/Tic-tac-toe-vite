@@ -1,10 +1,10 @@
-import GameBoard from './components/GameBoard';
+import Authorization from './components/Authorization';
 
 function App() {
   return (
     <div className="App">
       <h1 className="title">Крестики-нолики</h1>
-      <GameBoard />
+      <Authorization />
     </div>
   );
 }
